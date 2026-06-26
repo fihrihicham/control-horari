@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Control Horari — Taller B SCCL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+:root{
+  --blue-900:#0c2340;--blue-800:#1F4E79;--blue-600:#2E75B6;
+  --blue-200:#b5d4f4;--blue-50:#e6f1fb;
+  --amber-600:#EF9F27;--amber-50:#fff8e6;
+  --green-600:#217346;--green-50:#eaf3de;
+  --red-600:#C55A11;--red-50:#fce8dc;
+  --gray-50:#f8f9fb;--gray-100:#f0f2f5;--gray-200:#e2e6ec;
+  --gray-400:#9ba5b4;--gray-600:#5a6475;--gray-900:#1a1f2b;
+  --white:#fff;--radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--gray-100);color:var(--gray-900);min-height:100vh}
+
+/* ── VIEWS ── */
+.view{display:none;min-height:100vh}
+.view.active{display:flex}
+
+/* ════════════════════════════════
+   FICHAJE VIEW
+════════════════════════════════ */
+#viewFichaje{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--blue-900) 0%,var(--blue-800) 100%);
+  padding:20px;
+}
+.fich-card{
+  background:var(--white);border-radius:var(--radius-lg);
+  width:100%;max-width:380px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.32);
+  overflow:hidden;
+}
+.fich-top{
+  background:var(--blue-800);padding:20px 24px 16px;
+  display:flex;align-items:center;gap:14px;
+}
+.fich-logo{
+  width:44px;height:44px;background:var(--amber-600);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:#fff;
+  letter-spacing:-1px;flex-shrink:0;
+}
+.fich-brand-title{color:#fff;font-size:15px;font-weight:600}
+.fich-brand-sub{color:var(--blue-200);font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em}
+.fich-clock{
+  background:var(--blue-900);margin:0 24px;border-radius:var(--radius);
+  padding:14px 20px;text-align:center;margin-top:20px;
+}
+.fich-time{
+  font-family:'IBM Plex Mono',monospace;font-size:38px;font-weight:600;
+  color:#fff;letter-spacing:.04em;
+}
+.fich-date{font-size:12px;color:var(--blue-200);margin-top:4px;letter-spacing:.04em}
+.fich-body{padding:20px 24px 24px}
+.fich-label{font-size:11px;font-weight:600;color:var(--gray-400);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.worker-selector{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;
+}
+.worker-btn{
+  padding:10px 6px;border:1.5px solid var(--gray-200);border-radius:var(--radius);
+  background:var(--white);cursor:pointer;text-align:center;transition:all .15s;
+}
+.worker-btn:hover{border-color:var(--blue-600);background:var(--blue-50)}
+.worker-btn.selected{
+  border-color:var(--blue-600);background:var(--blue-50);
+  box-shadow:0 0 0 3px rgba(46,117,182,.15);
+}
+.worker-btn .wb-avatar{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;margin:0 auto 6px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.worker-btn .wb-name{font-size:10px;font-weight:600;color:var(--gray-900);line-height:1.2}
+
+/* PIN pad */
+.pin-display{
+  display:flex;gap:10px;justify-content:center;margin-bottom:16px;
+}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--gray-200);transition:all .15s;
+}
+.pin-dot.filled{background:var(--blue-800);border-color:var(--blue-800)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin-key{
+  height:56px;border:1.5px solid var(--gray-200);border-radius:var(--radius);
+  background:var(--white);font-size:20px;font-weight:500;
+  cursor:pointer;transition:all .15s;font-family:'IBM Plex Mono',monospace;
+  color:var(--gray-900);
+}
+.pin-key:hover{background:var(--gray-100);border-color:var(--gray-400)}
+.pin-key:active{transform:scale(.95)}
+.pin-key.del{font-size:16px;color:var(--gray-400)}
+.pin-key.ok{
+  background:var(--blue-800);color:#fff;border-color:var(--blue-800);
+  font-size:13px;font-weight:600;letter-spacing:.04em;
+}
+.pin-key.ok:hover{background:var(--blue-900)}
+.pin-error{
+  text-align:center;font-size:12px;color:#c55a11;font-weight:500;
+  margin-top:8px;min-height:18px;
+}
+
+/* Fichaje buttons */
+.fich-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.fich-btn{
+  padding:14px;border-radius:var(--radius);border:none;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;
+  font-family:'Inter',sans-serif;
+}
+.fich-btn.entrada{background:var(--green-600);color:#fff}
+.fich-btn.entrada:hover{background:#185a38}
+.fich-btn.sortida{background:var(--red-600);color:#fff}
+.fich-btn.sortida:hover{background:#9e400a}
+.fich-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.fich-status{
+  margin-top:14px;padding:10px 14px;border-radius:var(--radius);
+  font-size:12px;font-weight:500;text-align:center;display:none;
+}
+.fich-status.ok{background:var(--green-50);color:var(--green-600);border:1px solid #9FE1CB;display:block}
+.fich-status.err{background:var(--red-50);color:var(--red-600);border:1px solid #f09577;display:block}
+
+.fich-footer{
+  padding:12px 24px;border-top:1px solid var(--gray-100);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.fich-footer a{font-size:11px;color:var(--gray-400);cursor:pointer;text-decoration:none}
+.fich-footer a:hover{color:var(--blue-600)}
+
+/* ════════════════════════════════
+   ADMIN VIEW
+════════════════════════════════ */
+#viewAdmin{flex-direction:column}
+.admin-topbar{
+  background:var(--blue-800);height:56px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,0.18);
+}
+.admin-brand{display:flex;align-items:center;gap:12px}
+.admin-logo{
+  width:32px;height:32px;background:var(--amber-600);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:#fff;
+}
+.admin-title{color:#fff;font-size:15px;font-weight:600}
+.admin-sub{color:var(--blue-200);font-size:10px;font-family:'IBM Plex Mono',monospace}
+.admin-nav{display:flex;gap:4px}
+.nav-btn{
+  padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.2);
+  background:transparent;color:#fff;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background .15s;font-family:'Inter',sans-serif;
+}
+.nav-btn:hover{background:rgba(255,255,255,.12)}
+.nav-btn.active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4)}
+.nav-btn.danger{border-color:rgba(229,115,80,.5);color:#f4a58a}
+
+.admin-body{display:flex;flex:1;overflow:hidden}
+.admin-sidebar{
+  width:220px;background:var(--white);border-right:1px solid var(--gray-200);
+  padding:16px;display:flex;flex-direction:column;gap:16px;
+  flex-shrink:0;overflow-y:auto;
+}
+.admin-main{flex:1;padding:24px;overflow-y:auto}
+
+.section-label{
+  font-size:10px;font-weight:700;color:var(--gray-400);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;
+}
+.sidebar-select{
+  width:100%;padding:8px 10px;border:1px solid var(--gray-200);
+  border-radius:var(--radius);font-size:12px;
+  font-family:'Inter',sans-serif;background:var(--gray-50);
+  color:var(--gray-900);outline:none;cursor:pointer;appearance:none;
+}
+.sidebar-select:focus{border-color:var(--blue-600)}
+.sidebar-month-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sidebar-input{
+  width:100%;padding:8px 10px;border:1px solid var(--gray-200);
+  border-radius:var(--radius);font-size:12px;
+  font-family:'Inter',sans-serif;background:var(--gray-50);
+  color:var(--gray-900);outline:none;
+}
+.sidebar-input:focus{border-color:var(--blue-600)}
+
+/* stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{
+  background:var(--white);border:1px solid var(--gray-200);
+  border-radius:var(--radius-lg);padding:14px 16px;
+}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:700;color:var(--blue-800);font-family:'IBM Plex Mono',monospace}
+.stat-val span{font-size:12px;color:var(--gray-400);font-weight:400;margin-left:4px;font-family:'Inter',sans-serif}
+.stat-card.alert .stat-val{color:var(--red-600)}
+
+/* table */
+.table-card{
+  background:var(--white);border:1px solid var(--gray-200);
+  border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;
+}
+.table-card-header{
+  padding:14px 20px;border-bottom:1px solid var(--gray-200);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.table-card-title{font-size:13px;font-weight:600;color:var(--gray-900)}
+.table-actions{display:flex;gap:8px}
+.tbtn{
+  padding:6px 14px;border-radius:8px;border:1px solid var(--gray-200);
+  background:var(--white);color:var(--gray-600);font-size:12px;font-weight:500;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;
+  display:flex;align-items:center;gap:5px;
+}
+.tbtn:hover{background:var(--gray-100)}
+.tbtn.primary{background:var(--blue-800);color:#fff;border-color:var(--blue-800)}
+.tbtn.primary:hover{background:var(--blue-900)}
+.tbtn.green{background:var(--green-600);color:#fff;border-color:var(--green-600)}
+.tbtn.green:hover{background:#185a38}
+
+table.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{
+  background:var(--gray-50);font-size:10px;font-weight:700;color:var(--gray-400);
+  text-transform:uppercase;letter-spacing:.07em;padding:10px 12px;
+  text-align:left;border-bottom:1px solid var(--gray-200);
+}
+.data-table td{
+  padding:10px 12px;border-bottom:1px solid var(--gray-100);
+  color:var(--gray-900);vertical-align:middle;
+}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--gray-50)}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:600;letter-spacing:.04em;
+}
+.badge.we{background:var(--blue-50);color:var(--blue-600)}
+.badge.fest{background:var(--amber-50);color:#854F0B}
+.badge.ok{background:var(--green-50);color:var(--green-600)}
+.badge.miss{background:var(--red-50);color:var(--red-600)}
+.badge.partial{background:#fff8e6;color:#854F0B}
+.time-input{
+  width:80px;padding:4px 6px;border:1px solid var(--gray-200);
+  border-radius:6px;font-size:12px;font-family:'IBM Plex Mono',monospace;
+  text-align:center;outline:none;background:var(--gray-50);
+}
+.time-input:focus{border-color:var(--blue-600);background:#fff}
+.h-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+  color:var(--blue-800);
+}
+
+/* alerts */
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:var(--radius);
+  background:var(--red-50);border:1px solid #f09577;
+}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:var(--red-600);flex-shrink:0}
+.alert-text{font-size:12px;color:var(--red-600);font-weight:500}
+
+/* workers mgmt */
+.worker-mgmt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.worker-mgmt-card{
+  background:var(--white);border:1px solid var(--gray-200);
+  border-radius:var(--radius-lg);padding:16px;
+}
+.wmc-avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;margin-bottom:10px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.wmc-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.wmc-pin{
+  font-size:11px;color:var(--gray-400);font-family:'IBM Plex Mono',monospace;
+}
+.wmc-actions{display:flex;gap:6px;margin-top:10px}
+.wmc-btn{
+  flex:1;padding:6px;border-radius:6px;border:1px solid var(--gray-200);
+  background:var(--gray-50);color:var(--gray-600);
+  font-size:11px;font-weight:500;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.wmc-btn:hover{background:var(--gray-100)}
+.wmc-btn.danger{color:var(--red-600);border-color:#f09577}
+.wmc-btn.danger:hover{background:var(--red-50)}
+
+/* modal */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;padding:20px;
+}
+.modal{
+  background:var(--white);border-radius:var(--radius-lg);
+  width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.24);
+  overflow:hidden;
+}
+.modal-header{
+  background:var(--blue-800);padding:16px 20px;
+  color:#fff;font-size:14px;font-weight:600;
+}
+.modal-body{padding:20px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;color:var(--gray-600);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block}
+.form-input{
+  width:100%;padding:10px 12px;border:1px solid var(--gray-200);
+  border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;
+  outline:none;transition:border .15s;
+}
+.form-input:focus{border-color:var(--blue-600)}
+.modal-footer{
+  padding:12px 20px;border-top:1px solid var(--gray-100);
+  display:flex;gap:8px;justify-content:flex-end;
+}
+
+/* print */
+@media print{
+  @page{size:A4 portrait;margin:8mm}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  #viewFichaje,.admin-topbar,.admin-sidebar,.table-actions,.stats-grid,.alert-list,.nav-btn,.tbtn{display:none!important}
+  #viewAdmin{display:block!important}
+  .admin-body{display:block!important}
+  .admin-main{padding:0!important}
+  table.data-table{font-size:8px}
+  .data-table th,.data-table td{padding:4px 6px}
+}
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--gray-200);padding-bottom:0}
+.tab-btn{
+  padding:8px 16px;border:none;background:none;font-size:13px;
+  font-weight:500;color:var(--gray-400);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.tab-btn.active{color:var(--blue-800);border-bottom-color:var(--blue-800)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     VIEW: FICHAJE
+══════════════════════════════════════ -->
+<div id="viewFichaje" class="view active">
+  <div class="fich-card">
+    <div class="fich-top">
+      <div class="fich-logo">TB</div>
+      <div>
+        <div class="fich-brand-title">Control Horari</div>
+        <div class="fich-brand-sub">TALLER B SCCL · C/OM</div>
+      </div>
+    </div>
+
+    <div style="padding:0 16px">
+      <div class="fich-clock">
+        <div class="fich-time" id="clock">00:00:00</div>
+        <div class="fich-date" id="clockDate"></div>
+      </div>
+    </div>
+
+    <div class="fich-body">
+      <!-- Step 1: seleccionar treballador -->
+      <div id="stepWorker">
+        <div class="fich-label">Selecciona el teu nom</div>
+        <div class="worker-selector" id="workerSelector"></div>
+      </div>
+
+      <!-- Step 2: PIN -->
+      <div id="stepPin" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <button onclick="backToWorker()" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:20px;line-height:1">‹</button>
+          <span style="font-size:13px;font-weight:600" id="selectedName"></span>
+        </div>
+        <div class="fich-label">Introdueix el teu PIN</div>
+        <div class="pin-display" id="pinDisplay">
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <div class="pin-pad">
+          <button class="pin-key" onclick="pinPress('1')">1</button>
+          <button class="pin-key" onclick="pinPress('2')">2</button>
+          <button class="pin-key" onclick="pinPress('3')">3</button>
+          <button class="pin-key" onclick="pinPress('4')">4</button>
+          <button class="pin-key" onclick="pinPress('5')">5</button>
+          <button class="pin-key" onclick="pinPress('6')">6</button>
+          <button class="pin-key" onclick="pinPress('7')">7</button>
+          <button class="pin-key" onclick="pinPress('8')">8</button>
+          <button class="pin-key" onclick="pinPress('9')">9</button>
+          <button class="pin-key del" onclick="pinDel()">⌫</button>
+          <button class="pin-key" onclick="pinPress('0')">0</button>
+          <button class="pin-key ok" onclick="pinOk()">OK</button>
+        </div>
+        <div class="pin-error" id="pinError"></div>
+        <div class="fich-actions">
+          <button class="fich-btn entrada" id="btnEntrada" onclick="fichar('entrada')" disabled>▶ Entrada</button>
+          <button class="fich-btn sortida" id="btnSortida" onclick="fichar('sortida')" disabled>■ Sortida</button>
+        </div>
+        <div class="fich-status" id="fichStatus"></div>
+      </div>
+    </div>
+
+    <div class="fich-footer">
+      <span id="fichLastEvent" style="font-size:11px;color:var(--gray-400)"></span>
+      <a onclick="goAdmin()">⚙ Admin</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW: ADMIN LOGIN
+══════════════════════════════════════ -->
+<div id="viewAdminLogin" class="view" style="align-items:center;justify-content:center;background:var(--gray-100)">
+  <div style="background:var(--white);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.12)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:48px;height:48px;background:var(--blue-800);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;color:#fff">TB</div>
+      <div style="font-size:16px;font-weight:600;color:var(--gray-900)">Accés administrador</div>
+      <div style="font-size:12px;color:var(--gray-400);margin-top:4px">PIN d'administrador</div>
+    </div>
+    <div class="pin-display" id="adminPinDisplay" style="margin-bottom:16px">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="adminPinPress('1')">1</button>
+      <button class="pin-key" onclick="adminPinPress('2')">2</button>
+      <button class="pin-key" onclick="adminPinPress('3')">3</button>
+      <button class="pin-key" onclick="adminPinPress('4')">4</button>
+      <button class="pin-key" onclick="adminPinPress('5')">5</button>
+      <button class="pin-key" onclick="adminPinPress('6')">6</button>
+      <button class="pin-key" onclick="adminPinPress('7')">7</button>
+      <button class="pin-key" onclick="adminPinPress('8')">8</button>
+      <button class="pin-key" onclick="adminPinPress('9')">9</button>
+      <button class="pin-key del" onclick="adminPinDel()">⌫</button>
+      <button class="pin-key" onclick="adminPinPress('0')">0</button>
+      <button class="pin-key ok" onclick="adminPinOk()">OK</button>
+    </div>
+    <div class="pin-error" id="adminPinError"></div>
+    <button onclick="showView('viewFichaje')" style="width:100%;margin-top:12px;padding:10px;background:none;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;color:var(--gray-400);cursor:pointer">← Tornar al fichatge</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW: ADMIN PANEL
+══════════════════════════════════════ -->
+<div id="viewAdmin" class="view" style="flex-direction:column">
+  <header class="admin-topbar">
+    <div class="admin-brand">
+      <div class="admin-logo">TB</div>
+      <div>
+        <div class="admin-title">Panell d'administració</div>
+        <div class="admin-sub">TALLER B SCCL</div>
+      </div>
+    </div>
+    <div class="admin-nav">
+      <button class="nav-btn active" onclick="adminTab('tabRegistres',this)">Registres</button>
+      <button class="nav-btn" onclick="adminTab('tabTreballadors',this)">Treballadors</button>
+      <button class="nav-btn" onclick="adminTab('tabAlertes',this)">Alertes <span id="alertBadge"></span></button>
+      <button class="nav-btn danger" onclick="showView('viewFichaje')">← Sortir</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <aside class="admin-sidebar">
+      <div>
+        <div class="section-label">Treballador</div>
+        <select class="sidebar-select" id="filterWorker" onchange="renderAdmin()">
+          <option value="all">Tots els treballadors</option>
+        </select>
+      </div>
+      <div>
+        <div class="section-label">Període</div>
+        <div class="sidebar-month-row">
+          <select class="sidebar-select" id="filterMonth" onchange="renderAdmin()"></select>
+          <input type="number" class="sidebar-input" id="filterYear" value="2026" min="2020" max="2040" onchange="renderAdmin()">
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Exportar</div>
+        <button class="tbtn primary" style="width:100%;justify-content:center;margin-bottom:6px" onclick="exportPDF()">⬇ PDF</button>
+        <button class="tbtn green" style="width:100%;justify-content:center" onclick="exportCSV()">⬇ Excel / CSV</button>
+      </div>
+      <div>
+        <div class="section-label">Dies festius</div>
+        <div id="sidebarFestiusList" style="font-size:11px;color:var(--gray-400);margin-bottom:6px"></div>
+        <div style="display:flex;gap:6px">
+          <input type="number" class="sidebar-input" id="newFestiu" min="1" max="31" placeholder="Dia" style="width:60px">
+          <button class="tbtn" style="flex:1;justify-content:center" onclick="addFestiu()">+ Festiu</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+
+      <!-- TAB REGISTRES -->
+      <div id="tabRegistres" class="tab-panel active">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title" id="tableTitle">Registres del mes</div>
+            <div class="table-actions">
+              <button class="tbtn" onclick="window.print()">🖨 Imprimir</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table" id="registresTable">
+              <thead>
+                <tr>
+                  <th>Dia</th><th>Treballador</th><th>Mat. Entrada</th>
+                  <th>Mat. Sortida</th><th>Tard. Entrada</th><th>Tard. Sortida</th>
+                  <th>H. Totals</th><th>Estat</th>
+                </tr>
+              </thead>
+              <tbody id="registresBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB TREBALLADORS -->
+      <div id="tabTreballadors" class="tab-panel">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <button class="tbtn primary" onclick="openModalWorker()">+ Nou treballador</button>
+        </div>
+        <div class="worker-mgmt-grid" id="workerMgmtGrid"></div>
+      </div>
+
+      <!-- TAB ALERTES -->
+      <div id="tabAlertes" class="tab-panel">
+        <div class="table-card" style="padding:16px">
+          <div class="table-card-header" style="padding:0 0 14px"><div class="table-card-title">Alertes del mes</div></div>
+          <div class="alert-list" id="alertList"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL: Nou/Editar treballador -->
+<div class="modal-bg" id="modalWorker" style="display:none">
+  <div class="modal">
+    <div class="modal-header" id="modalWorkerTitle">Nou treballador</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input class="form-input" id="mwNom" placeholder="Ex: JORDI ALVAREZ" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PIN (4 dígits)</label>
+        <input class="form-input" id="mwPin" type="number" placeholder="1234" maxlength="4" style="font-family:'IBM Plex Mono',monospace">
+      </div>
+      <div class="form-group">
+        <label class="form-label">NIF (opcional)</label>
+        <input class="form-input" id="mwNif" placeholder="12345678A">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeModal()">Cancel·lar</button>
+      <button class="tbtn primary" onclick="saveWorker()">Desar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA STORE (localStorage — substituir per API en producció)
+// ══════════════════════════════════════
+const ADMIN_PIN = '1234'; // Canviar en producció!
+
+const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny',
+                   'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const DAYS_CA   = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+const DAYS_3    = ['Dg.','Dl.','Dt.','Dc.','Dj.','Dv.','Ds.'];
+const WORKER_COLORS = ['#1F4E79','#217346','#7030A0','#C55A11','#2E75B6','#833C00','#1a5590','#3d5a00'];
+const FESTIUS_DEFAULT = {1:[1,6],2:[],3:[],4:[],5:[1],6:[24],7:[],8:[15],9:[11],10:[12],11:[1],12:[6,8,25,26]};
+
+function db(key, val) {
+  if (val === undefined) {
+    try { return JSON.parse(localStorage.getItem(key)) || null; } catch { return null; }
+  }
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+function getWorkers() { return db('workers') || [
+  {id:1,nom:'MELISSA CARDENAS',pin:'1111',nif:'',color:'#1F4E79'},
+  {id:2,nom:'PAVEL STARTSEV',pin:'2222',nif:'',color:'#217346'},
+  {id:3,nom:'JORDI ALVAREZ',pin:'3333',nif:'',color:'#7030A0'},
+  {id:4,nom:'ZAIN DAR',pin:'4444',nif:'',color:'#C55A11'},
+  {id:5,nom:'LEONARDO VELASQUEZ',pin:'5555',nif:'',color:'#2E75B6'},
+  {id:6,nom:'OMAR VLADIMIR',pin:'6666',nif:'',color:'#833C00'},
+]; }
+function saveWorkers(w) { db('workers', w); }
+
+function getRegistres() { return db('registres') || []; }
+function saveRegistres(r) { db('registres', r); }
+
+function getFestiusMes(m,y) {
+  const k = `festius_${m}_${y}`;
+  return db(k) || [...(FESTIUS_DEFAULT[m]||[])];
+}
+function saveFestiusMes(m,y,list) { db(`festius_${m}_${y}`, list); }
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' +
+    String(now.getMinutes()).padStart(2,'0') + ':' +
+    String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clockDate').textContent =
+    DAYS_CA[now.getDay()] + ', ' + now.getDate() + ' ' + MONTHS_CA[now.getMonth()] + ' ' + now.getFullYear();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── VIEWS ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── FICHAJE: TREBALLADORS ──
+let activeWorkerId = null;
+let pinBuffer = '';
+let pinOkPressed = false;
+
+function renderWorkerSelector() {
+  const ws = getWorkers();
+  const sel = document.getElementById('workerSelector');
+  sel.innerHTML = '';
+  ws.forEach(w => {
+    const initials = w.nom.split(' ').slice(0,2).map(x=>x[0]).join('');
+    const btn = document.createElement('button');
+    btn.className = 'worker-btn';
+    btn.innerHTML = `<div class="wb-avatar" style="background:${w.color}">${initials}</div><div class="wb-name">${w.nom}</div>`;
+    btn.onclick = () => selectWorker(w.id);
+    sel.appendChild(btn);
+  });
+}
+
+function selectWorker(id) {
+  activeWorkerId = id;
+  pinBuffer = '';
+  pinOkPressed = false;
+  updatePinDisplay('pinDisplay', 0);
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('fichStatus').className = 'fich-status';
+  document.getElementById('btnEntrada').disabled = true;
+  document.getElementById('btnSortida').disabled = true;
+  const w = getWorkers().find(x => x.id === id);
+  document.getElementById('selectedName').textContent = w.nom;
+  document.getElementById('stepWorker').style.display = 'none';
+  document.getElementById('stepPin').style.display = 'block';
+  checkTodayStatus(id);
+}
+
+function backToWorker() {
+  activeWorkerId = null; pinBuffer = '';
+  document.getElementById('stepWorker').style.display = 'block';
+  document.getElementById('stepPin').style.display = 'none';
+}
+
+function updatePinDisplay(id, len) {
+  const dots = document.getElementById(id).querySelectorAll('.pin-dot');
+  dots.forEach((d,i) => d.classList.toggle('filled', i < len));
+}
+
+function pinPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDisplay('pinDisplay', pinBuffer.length);
+  if (pinBuffer.length === 4) pinOk();
+}
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDisplay('pinDisplay', pinBuffer.length);
+}
+function pinOk() {
+  const w = getWorkers().find(x => x.id === activeWorkerId);
+  if (!w) return;
+  if (pinBuffer === w.pin) {
+    pinOkPressed = true;
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('btnEntrada').disabled = false;
+    document.getElementById('btnSortida').disabled = false;
+  } else {
+    document.getElementById('pinError').textContent = 'PIN incorrecte. Torna-ho a intentar.';
+    pinBuffer = '';
+    updatePinDisplay('pinDisplay', 0);
+    pinOkPressed = false;
+    document.getElementById('btnEntrada').disabled = true;
+    document.getElementById('btnSortida').disabled = true;
+  }
+}
+
+function checkTodayStatus(workerId) {
+  const today = todayStr();
+  const regs = getRegistres();
+  const reg = regs.find(r => r.workerId === workerId && r.data === today);
+  const el = document.getElementById('fichLastEvent');
+  if (!reg) { el.textContent = 'Avui: sense registre'; return; }
+  if (reg.matEntrada && !reg.matSortida) el.textContent = `Entrada: ${reg.matEntrada}`;
+  else if (reg.matEntrada && reg.matSortida && !reg.tarEntrada) el.textContent = `Sortida matí: ${reg.matSortida}`;
+  else if (reg.tarEntrada && !reg.tarSortida) el.textContent = `Entrada tarda: ${reg.tarEntrada}`;
+  else if (reg.tarSortida) el.textContent = `Sortida tarda: ${reg.tarSortida} ✓`;
+}
+
+function todayStr() {
+  const n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+}
+function nowTimeStr() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+
+function fichar(tipus) {
+  if (!pinOkPressed) return;
+  const now = nowTimeStr();
+  const today = todayStr();
+  const regs = getRegistres();
+  let reg = regs.find(r => r.workerId === activeWorkerId && r.data === today);
+
+  if (!reg) {
+    reg = { workerId: activeWorkerId, data: today,
+            matEntrada:null, matSortida:null, tarEntrada:null, tarSortida:null };
+    regs.push(reg);
+  }
+
+  const w = getWorkers().find(x => x.id === activeWorkerId);
+  let msg = '';
+
+  if (tipus === 'entrada') {
+    if (!reg.matEntrada) { reg.matEntrada = now; msg = `Entrada matí registrada: ${now}`; }
+    else if (!reg.tarEntrada) { reg.tarEntrada = now; msg = `Entrada tarda registrada: ${now}`; }
+    else { showStatus('err', 'Ja tens totes les entrades registrades avui.'); return; }
+  } else {
+    if (reg.matEntrada && !reg.matSortida) { reg.matSortida = now; msg = `Sortida matí registrada: ${now}`; }
+    else if (reg.tarEntrada && !reg.tarSortida) { reg.tarSortida = now; msg = `Sortida tarda registrada: ${now}`; }
+    else { showStatus('err', 'No tens cap entrada pendent de tancar.'); return; }
+  }
+
+  saveRegistres(regs);
+  showStatus('ok', msg);
+  checkTodayStatus(activeWorkerId);
+
+  setTimeout(() => {
+    backToWorker();
+    renderWorkerSelector();
+    document.getElementById('fichStatus').className = 'fich-status';
+  }, 2500);
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById('fichStatus');
+  el.className = 'fich-status ' + type;
+  el.textContent = msg;
+}
+
+// ── ADMIN LOGIN ──
+let adminPinBuf = '';
+function goAdmin() { adminPinBuf = ''; updatePinDisplay('adminPinDisplay',0); document.getElementById('adminPinError').textContent=''; showView('viewAdminLogin'); }
+function adminPinPress(d) { if(adminPinBuf.length>=4)return; adminPinBuf+=d; updatePinDisplay('adminPinDisplay',adminPinBuf.length); if(adminPinBuf.length===4)adminPinOk(); }
+function adminPinDel() { adminPinBuf=adminPinBuf.slice(0,-1); updatePinDisplay('adminPinDisplay',adminPinBuf.length); }
+function adminPinOk() {
+  if (adminPinBuf === ADMIN_PIN) {
+    showView('viewAdmin');
+    initAdmin();
+  } else {
+    document.getElementById('adminPinError').textContent = 'PIN incorrecte';
+    adminPinBuf=''; updatePinDisplay('adminPinDisplay',0);
+  }
+}
+
+// ── ADMIN PANEL ──
+function adminTab(panelId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(panelId==='tabTreballadors') renderWorkerMgmt();
+  if(panelId==='tabAlertes') renderAlertes();
+}
+
+function initAdmin() {
+  const ws = getWorkers();
+  // Populate filter worker
+  const fw = document.getElementById('filterWorker');
+  fw.innerHTML = '<option value="all">Tots els treballadors</option>';
+  ws.forEach(w => { const o=document.createElement('option'); o.value=w.id; o.textContent=w.nom; fw.appendChild(o); });
+  // Populate month
+  const fm = document.getElementById('filterMonth');
+  fm.innerHTML = '';
+  MONTHS_CA.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i+1; o.textContent=m; fm.appendChild(o); });
+  fm.value = new Date().getMonth()+1;
+  document.getElementById('filterYear').value = new Date().getFullYear();
+  renderAdmin();
+  renderAlertes();
+  renderFestiusSidebar();
+}
+
+function renderAdmin() {
+  const month = parseInt(document.getElementById('filterMonth').value);
+  const year  = parseInt(document.getElementById('filterYear').value);
+  const wfil  = document.getElementById('filterWorker').value;
+  const ws    = getWorkers();
+  const regs  = getRegistres();
+  const festius = getFestiusMes(month, year);
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const mStr = String(month).padStart(2,'0');
+  const filtWs = wfil === 'all' ? ws : ws.filter(w => w.id == wfil);
+
+  document.getElementById('tableTitle').textContent =
+    (wfil==='all'?'Tots els treballadors':ws.find(w=>w.id==wfil)?.nom) +
+    ' — ' + MONTHS_CA[month-1] + ' ' + year;
+
+  // Stats
+  let totalLab=0, totalHores=0, totalMissing=0, totalFicat=0;
+  const tbody = document.getElementById('registresBody');
+  tbody.innerHTML = '';
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const dow = new Date(year,month-1,d).getDay();
+    const isWE = dow===0||dow===6;
+    const isFest = festius.includes(d);
+    const dataStr = year+'-'+mStr+'-'+String(d).padStart(2,'0');
+
+    filtWs.forEach(w => {
+      const reg = regs.find(r => r.workerId===w.id && r.data===dataStr);
+      let hTotal = 0;
+      if (reg) {
+        if (reg.matEntrada && reg.matSortida) hTotal += timeDiff(reg.matEntrada, reg.matSortida);
+        if (reg.tarEntrada && reg.tarSortida) hTotal += timeDiff(reg.tarEntrada, reg.tarSortida);
+      }
+      const estat = getEstat(reg, isWE, isFest);
+      if (!isWE && !isFest) { totalLab++; if(estat==='ok') { totalFicat++; totalHores+=hTotal; } else totalMissing++; }
+
+      const tr = document.createElement('tr');
+      let rowStyle = '';
+      if (isWE && isFest) rowStyle = 'background:#ffe0b2';
+      else if (isFest)    rowStyle = 'background:#fff8e6';
+      else if (isWE)      rowStyle = 'background:#e6f1fb';
+      tr.style.cssText = rowStyle;
+
+      const avatar = `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${w.color};color:#fff;font-size:9px;font-weight:700;margin-right:6px;font-family:'IBM Plex Mono',monospace;vertical-align:middle">${w.nom.split(' ').slice(0,2).map(x=>x[0]).join('')}</span>`;
+      tr.innerHTML = `
+        <td><b>${String(d).padStart(2,'0')}</b> <span style="font-size:10px;color:var(--gray-400)">${DAYS_3[dow]}</span></td>
+        <td>${avatar}${filtWs.length>1?w.nom:''}</td>
+        <td><input class="time-input" value="${reg?.matEntrada||''}" onchange="updateReg(${w.id},'${dataStr}','matEntrada',this.value)"></td>
+        <td><input class="time-input" value="${reg?.matSortida||''}" onchange="updateReg(${w.id},'${dataStr}','matSortida',this.value)"></td>
+        <td><input class="time-input" value="${reg?.tarEntrada||''}" onchange="updateReg(${w.id},'${dataStr}','tarEntrada',this.value)"></td>
+        <td><input class="time-input" value="${reg?.tarSortida||''}" onchange="updateReg(${w.id},'${dataStr}','tarSortida',this.value)"></td>
+        <td><span class="h-badge">${hTotal>0?hTotal.toFixed(1)+'h':'—'}</span></td>
+        <td>${renderEstat(estat,isWE,isFest)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Stats cards
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Dies laborables</div><div class="stat-val">${Math.round(totalLab/filtWs.length||0)}<span>dies</span></div></div>
+    <div class="stat-card"><div class="stat-lbl">Hores fitxades</div><div class="stat-val">${totalHores.toFixed(0)}<span>h</span></div></div>
+    <div class="stat-card"><div class="stat-lbl">Dies fitxats</div><div class="stat-val">${totalFicat}<span>dies</span></div></div>
+    <div class="stat-card${totalMissing>0?' alert':''}"><div class="stat-lbl">Dies sense fitxar</div><div class="stat-val">${totalMissing}<span>dies</span></div></div>`;
+
+  renderFestiusSidebar();
+}
+
+function timeDiff(t1,t2) {
+  if(!t1||!t2)return 0;
+  const [h1,m1]=t1.split(':').map(Number), [h2,m2]=t2.split(':').map(Number);
+  return ((h2*60+m2)-(h1*60+m1))/60;
+}
+
+function getEstat(reg, isWE, isFest) {
+  if (isWE||isFest) return 'free';
+  if (!reg||(!reg.matEntrada&&!reg.tarEntrada)) return 'miss';
+  if ((reg.matEntrada&&reg.matSortida&&reg.tarEntrada&&reg.tarSortida)) return 'ok';
+  return 'partial';
+}
+
+function renderEstat(estat,isWE,isFest) {
+  if (isWE&&isFest) return '<span class="badge">FE + CS</span>';
+  if (isWE)   return '<span class="badge we">Cap setmana</span>';
+  if (isFest) return '<span class="badge fest">Festiu</span>';
+  if (estat==='ok')      return '<span class="badge ok">Complet</span>';
+  if (estat==='partial') return '<span class="badge partial">Incomplet</span>';
+  return '<span class="badge miss">Absent</span>';
+}
+
+function updateReg(wId, dataStr, field, val) {
+  const regs = getRegistres();
+  let reg = regs.find(r=>r.workerId===wId&&r.data===dataStr);
+  if (!reg) { reg={workerId:wId,data:dataStr,matEntrada:null,matSortida:null,tarEntrada:null,tarSortida:null}; regs.push(reg); }
+  reg[field] = val||null;
+  saveRegistres(regs);
+}
+
+// ── ALERTES ──
+function renderAlertes() {
+  const month = parseInt(document.getElementById('filterMonth')?.value || new Date().getMonth()+1);
+  const year  = parseInt(document.getElementById('filterYear')?.value || new Date().getFullYear());
+  const ws    = getWorkers();
+  const regs  = getRegistres();
+  const festius = getFestiusMes(month, year);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+  const mStr  = String(month).padStart(2,'0');
+  const alerts = [];
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const date = new Date(year, month-1, d);
+    if (date > today) continue; // no alertar dies futurs
+    const dow = date.getDay();
+    if (dow===0||dow===6) continue;
+    if (festius.includes(d)) continue;
+    const dataStr = year+'-'+mStr+'-'+String(d).padStart(2,'0');
+    ws.forEach(w => {
+      const reg = regs.find(r=>r.workerId===w.id&&r.data===dataStr);
+      const estat = getEstat(reg, false, false);
+      if (estat==='miss') alerts.push({ w, d, estat:'Absent' });
+      else if (estat==='partial') alerts.push({ w, d, estat:'Fitxatge incomplet' });
+    });
+  }
+
+  const badge = document.getElementById('alertBadge');
+  if (alerts.length) badge.innerHTML = `<span style="background:#e24b4a;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px">${alerts.length}</span>`;
+  else badge.innerHTML='';
+
+  const list = document.getElementById('alertList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!alerts.length) { list.innerHTML='<div class="empty-state">Cap alerta per aquest mes ✓</div>'; return; }
+  alerts.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'alert-item';
+    el.innerHTML = `<div class="alert-dot"></div><div class="alert-text">
+      <b>${a.w.nom}</b> — Dia ${a.d} ${MONTHS_CA[month-1]}: ${a.estat}</div>`;
+    list.appendChild(el);
+  });
+}
+
+// ── FESTIUS SIDEBAR ──
+function renderFestiusSidebar() {
+  const month = parseInt(document.getElementById('filterMonth')?.value||new Date().getMonth()+1);
+  const year  = parseInt(document.getElementById('filterYear')?.value||new Date().getFullYear());
+  const fl = getFestiusMes(month, year);
+  const el = document.getElementById('sidebarFestiusList');
+  if (!fl.length) { el.textContent='Cap festiu afegit'; return; }
+  el.innerHTML = [...fl].sort((a,b)=>a-b).map(d=>
+    `<span style="background:var(--amber-50);border:1px solid #FAC775;border-radius:4px;padding:2px 7px;margin:2px;display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#633806">
+      Dia ${d} <span onclick="removeFestiu(${d})" style="cursor:pointer;font-weight:700;color:#EF9F27">×</span>
+    </span>`
+  ).join('');
+}
+
+function addFestiu() {
+  const inp = document.getElementById('newFestiu');
+  const d = parseInt(inp.value);
+  const month = parseInt(document.getElementById('filterMonth').value);
+  const year  = parseInt(document.getElementById('filterYear').value);
+  const days  = new Date(year,month,0).getDate();
+  if (!d||d<1||d>days) return;
+  const fl = getFestiusMes(month,year);
+  if (!fl.includes(d)) fl.push(d);
+  saveFestiusMes(month,year,fl);
+  inp.value='';
+  renderFestiusSidebar();
+  renderAdmin();
+}
+function removeFestiu(d) {
+  const month=parseInt(document.getElementById('filterMonth').value);
+  const year=parseInt(document.getElementById('filterYear').value);
+  const fl=getFestiusMes(month,year).filter(x=>x!==d);
+  saveFestiusMes(month,year,fl);
+  renderFestiusSidebar();
+  renderAdmin();
+}
+
+// ── WORKER MGMT ──
+let editingWorkerId = null;
+function renderWorkerMgmt() {
+  const ws = getWorkers();
+  const grid = document.getElementById('workerMgmtGrid');
+  grid.innerHTML = '';
+  ws.forEach(w => {
+    const initials = w.nom.split(' ').slice(0,2).map(x=>x[0]).join('');
+    const card = document.createElement('div');
+    card.className = 'worker-mgmt-card';
+    card.innerHTML = `
+      <div class="wmc-avatar" style="background:${w.color}">${initials}</div>
+      <div class="wmc-name">${w.nom}</div>
+      <div class="wmc-pin">PIN: ${'•'.repeat(w.pin.length)}</div>
+      <div class="wmc-actions">
+        <button class="wmc-btn" onclick="openModalWorker(${w.id})">Editar</button>
+        <button class="wmc-btn danger" onclick="deleteWorker(${w.id})">Eliminar</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function openModalWorker(id=null) {
+  editingWorkerId = id;
+  document.getElementById('modalWorkerTitle').textContent = id ? 'Editar treballador' : 'Nou treballador';
+  if (id) {
+    const w = getWorkers().find(x=>x.id===id);
+    document.getElementById('mwNom').value = w.nom;
+    document.getElementById('mwPin').value = w.pin;
+    document.getElementById('mwNif').value = w.nif||'';
+  } else {
+    document.getElementById('mwNom').value='';
+    document.getElementById('mwPin').value='';
+    document.getElementById('mwNif').value='';
+  }
+  document.getElementById('modalWorker').style.display='flex';
+}
+function closeModal() { document.getElementById('modalWorker').style.display='none'; }
+
+function saveWorker() {
+  const nom = document.getElementById('mwNom').value.trim().toUpperCase();
+  const pin = String(document.getElementById('mwPin').value).trim();
+  const nif = document.getElementById('mwNif').value.trim();
+  if (!nom||pin.length!==4||isNaN(pin)) { alert('Nom i PIN de 4 dígits obligatoris'); return; }
+  const ws = getWorkers();
+  if (editingWorkerId) {
+    const w = ws.find(x=>x.id===editingWorkerId);
+    w.nom=nom; w.pin=pin; w.nif=nif;
+  } else {
+    const newId = Math.max(0,...ws.map(x=>x.id))+1;
+    ws.push({id:newId,nom,pin,nif,color:WORKER_COLORS[(newId-1)%WORKER_COLORS.length]});
+  }
+  saveWorkers(ws);
+  closeModal();
+  renderWorkerMgmt();
+  renderWorkerSelector();
+  renderAdmin();
+}
+
+function deleteWorker(id) {
+  if (!confirm('Eliminar aquest treballador? Es perdran els seus registres.')) return;
+  saveWorkers(getWorkers().filter(w=>w.id!==id));
+  const regs = getRegistres().filter(r=>r.workerId!==id);
+  saveRegistres(regs);
+  renderWorkerMgmt();
+  renderWorkerSelector();
+  renderAdmin();
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  const month=parseInt(document.getElementById('filterMonth').value);
+  const year=parseInt(document.getElementById('filterYear').value);
+  const ws=getWorkers(), regs=getRegistres(), festius=getFestiusMes(month,year);
+  const daysInMonth=new Date(year,month,0).getDate();
+  const mStr=String(month).padStart(2,'0');
+  const wfil=document.getElementById('filterWorker').value;
+  const filtWs=wfil==='all'?ws:ws.filter(w=>w.id==wfil);
+  let csv='Treballador;Data;Dia setmana;Mat.Entrada;Mat.Sortida;Tard.Entrada;Tard.Sortida;H.Totals;Estat\n';
+  for(let d=1;d<=daysInMonth;d++){
+    const dow=new Date(year,month-1,d).getDay();
+    const isWE=dow===0||dow===6, isFest=festius.includes(d);
+    const dataStr=year+'-'+mStr+'-'+String(d).padStart(2,'0');
+    filtWs.forEach(w=>{
+      const reg=regs.find(r=>r.workerId===w.id&&r.data===dataStr);
+      let hT=0;
+      if(reg){if(reg.matEntrada&&reg.matSortida)hT+=timeDiff(reg.matEntrada,reg.matSortida);if(reg.tarEntrada&&reg.tarSortida)hT+=timeDiff(reg.tarEntrada,reg.tarSortida);}
+      const estat=isWE?'Cap setmana':isFest?'Festiu':getEstat(reg,false,false);
+      csv+=`${w.nom};${dataStr};${DAYS_CA[dow]};${reg?.matEntrada||''};${reg?.matSortida||''};${reg?.tarEntrada||''};${reg?.tarSortida||''};${hT>0?hT.toFixed(1):'0'};${estat}\n`;
+    });
+  }
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`ControlHorari_${mStr}_${year}.csv`; a.click();
+}
+
+function exportPDF() { window.print(); }
+
+// ── INIT ──
+renderWorkerSelector();
+</script>
+</body>
+</html>
